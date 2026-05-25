@@ -1,0 +1,27 @@
+# Blueprint Render — definiuje całe wdrożenie: baza + serwis WWW.
+# Render czyta ten plik i tworzy wszystko automatycznie.
+
+databases:
+  - name: fitprofit-db
+    plan: free
+    region: frankfurt
+    databaseName: fitprofit
+    user: fitprofit
+
+services:
+  - type: web
+    name: fitprofit-admin
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: cd panel && npm install --include=dev && npm run build && cd ../backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fitprofit-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
