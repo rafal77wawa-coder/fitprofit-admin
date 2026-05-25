@@ -99,7 +99,9 @@ CREATE TABLE IF NOT EXISTS rewards (
   icon        TEXT NOT NULL DEFAULT '🎁',
   cost        INTEGER NOT NULL DEFAULT 0,
   stock       INTEGER NOT NULL DEFAULT -1,               -- -1 = bez limitu
-  enabled     INTEGER NOT NULL DEFAULT 1
+  enabled     INTEGER NOT NULL DEFAULT 1,
+  image_url   TEXT NOT NULL DEFAULT '',                  -- zdjęcie nagrody (URL lub data-URL)
+  codes       TEXT NOT NULL DEFAULT ''                   -- kody kuponów, jeden na linię
 );
 
 -- ── Strony informacyjne (zasady / nagrody / niestandardowe) ──

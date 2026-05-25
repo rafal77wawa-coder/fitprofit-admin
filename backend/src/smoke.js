@@ -121,7 +121,7 @@ try {
   const rw0 = await (await fetch(base + '/api/admin/rewards/' + cid, { headers: hAuth })).json();
   ok('GET rewards zwraca liste', Array.isArray(rw0.rewards) && rw0.rewards.length >= 1);
   const cnt0 = rw0.rewards.length;
-  const editedR = rw0.rewards.map((r, i) => (i === 0 ? { ...r, cost: 7777 } : r));
+  const editedR = rw0.rewards.map((r, i) => (i === 0 ? { ...r, cost: 7777, codes: 'KOD-AAA\nKOD-BBB', image_url: 'data:image/png;base64,AAAA' } : r));
   const putR = await fetch(base + '/api/admin/rewards/' + cid, {
     method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
     body: JSON.stringify({ rewards: editedR }),
@@ -129,6 +129,7 @@ try {
   ok('zapis nagrod (PUT) zwraca 200', putR.status === 200);
   const cfgR = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
   ok('zmiana kosztu nagrody w /api/app/config', cfgR.rewards.some((r) => Number(r.cost) === 7777));
+  ok('kody i zdjecie nagrody w /api/app/config', cfgR.rewards.some((r) => String(r.codes).includes('KOD-AAA') && String(r.image_url).startsWith('data:image')));
   await fetch(base + '/api/admin/rewards/' + cid, {
     method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
     body: JSON.stringify({ rewards: rw0.rewards }),

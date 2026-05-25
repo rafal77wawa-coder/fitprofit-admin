@@ -58,6 +58,15 @@ export async function initDb() {
   const schemaFile = USE_PG ? 'schema.postgres.sql' : 'schema.sqlite.sql';
   await impl.exec(fs.readFileSync(path.join(ROOT, schemaFile), 'utf8'));
 
+  // Migracje kolumn dodanych po pierwszym wdrożeniu — dla baz utworzonych
+  // wcześniej. Na świeżej bazie ALTER zgłosi błąd (kolumna już jest) i go pomijamy.
+  for (const sql of [
+    "ALTER TABLE rewards ADD COLUMN image_url TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE rewards ADD COLUMN codes TEXT NOT NULL DEFAULT ''",
+  ]) {
+    try { await impl.exec(sql); } catch (e) { /* kolumna już istnieje */ }
+  }
+
   const row = await impl.get('SELECT COUNT(*) AS c FROM admin_users');
   if (Number(row.c) === 0) {
     await seed(impl);

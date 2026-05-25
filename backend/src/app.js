@@ -20,7 +20,7 @@ const PANEL_DIST = path.join(__dirname, '..', '..', 'panel', 'dist');
 export function createApp() {
   const app = express();
   app.use(cors());
-  app.use(express.json());
+  app.use(express.json({ limit: '12mb' }));
 
   app.get('/api/health', (req, res) => {
     res.json({ ok: true, service: 'fitprofit-admin-api', ts: Date.now() });

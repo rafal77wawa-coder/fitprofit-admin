@@ -19,7 +19,7 @@ router.get('/config', async (req, res) => {
   );
   const charity = await db.get('SELECT * FROM charity_goals WHERE contest_id = ?', contest.id);
   const rewards = await db.all(
-    'SELECT id, name, description, icon, cost, stock FROM rewards WHERE contest_id = ? AND enabled = 1 ORDER BY cost',
+    'SELECT id, name, description, icon, image_url, codes, cost, stock FROM rewards WHERE contest_id = ? AND enabled = 1 ORDER BY cost',
     contest.id
   );
   const infoPages = await db.all('SELECT type, title, content FROM info_pages WHERE contest_id = ?', contest.id);
