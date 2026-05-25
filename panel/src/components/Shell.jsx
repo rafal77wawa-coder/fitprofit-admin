@@ -3,6 +3,10 @@ import { useAuth } from '../AuthContext.jsx';
 import { T } from '../theme.js';
 import Dashboard from '../pages/Dashboard.jsx';
 import Scoring from '../pages/Scoring.jsx';
+import Branding from '../pages/Branding.jsx';
+import Charity from '../pages/Charity.jsx';
+import Rewards from '../pages/Rewards.jsx';
+import InfoPages from '../pages/InfoPages.jsx';
 
 // Lista modułów panelu. stage = etap wdrożenia (1 = gotowy).
 const MODULES = [
@@ -96,6 +100,10 @@ export default function Shell() {
         <main style={{ flex: 1, overflowY: 'auto', padding: '26px 28px' }}>
           {view === 'dashboard' ? <Dashboard />
             : view === 'scoring' ? <Scoring />
+            : view === 'branding' ? <Branding />
+            : view === 'charity' ? <Charity />
+            : view === 'rewards' ? <Rewards />
+            : view === 'pages' ? <InfoPages />
             : <Placeholder module={current} />}
         </main>
       </div>

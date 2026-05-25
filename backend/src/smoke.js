@@ -75,6 +75,85 @@ try {
   const cfg3 = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
   ok('przywrocenie punktacji dziala',
     Number(cfg3.scoring.find((r) => r.category === 'foot').points_per_unit) === foot0);
+
+  // edycja brandingu: panel -> API -> /api/app/config
+  const b0 = await (await fetch(base + '/api/admin/branding/' + cid, { headers: hAuth })).json();
+  ok('GET branding zwraca nazwe wyzwania', !!b0.branding && !!b0.branding.name);
+  const name0 = b0.branding.name;
+  const putB = await fetch(base + '/api/admin/branding/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({ ...b0.branding, name: 'Wyzwanie TEST' }),
+  });
+  ok('zapis brandingu (PUT) zwraca 200', putB.status === 200);
+  const cfgB = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
+  ok('zmiana nazwy widoczna w /api/app/config', cfgB.contest.name === 'Wyzwanie TEST');
+  const noTokB = await fetch(base + '/api/admin/branding/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...b0.branding, name: 'X' }),
+  });
+  ok('zapis brandingu bez tokenu -> 401', noTokB.status === 401);
+  await fetch(base + '/api/admin/branding/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify(b0.branding),
+  });
+  const cfgB2 = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
+  ok('przywrocenie nazwy dziala', cfgB2.contest.name === name0);
+
+  // edycja celu charytatywnego: panel -> API -> /api/app/config
+  const ch0 = await (await fetch(base + '/api/admin/charity/' + cid, { headers: hAuth })).json();
+  ok('GET charity zwraca cel', !!ch0.charity && !!ch0.charity.name);
+  const target0 = ch0.charity.target_amount;
+  const putC = await fetch(base + '/api/admin/charity/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({ ...ch0.charity, target_amount: 12345 }),
+  });
+  ok('zapis celu (PUT) zwraca 200', putC.status === 200);
+  const cfgC = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
+  ok('zmiana celu widoczna w /api/app/config', Number(cfgC.charity.target_amount) === 12345);
+  await fetch(base + '/api/admin/charity/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify(ch0.charity),
+  });
+  const cfgC2 = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
+  ok('przywrocenie celu dziala', Number(cfgC2.charity.target_amount) === Number(target0));
+
+  // edycja katalogu nagrod: panel -> API -> /api/app/config
+  const rw0 = await (await fetch(base + '/api/admin/rewards/' + cid, { headers: hAuth })).json();
+  ok('GET rewards zwraca liste', Array.isArray(rw0.rewards) && rw0.rewards.length >= 1);
+  const cnt0 = rw0.rewards.length;
+  const editedR = rw0.rewards.map((r, i) => (i === 0 ? { ...r, cost: 7777 } : r));
+  const putR = await fetch(base + '/api/admin/rewards/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({ rewards: editedR }),
+  });
+  ok('zapis nagrod (PUT) zwraca 200', putR.status === 200);
+  const cfgR = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
+  ok('zmiana kosztu nagrody w /api/app/config', cfgR.rewards.some((r) => Number(r.cost) === 7777));
+  await fetch(base + '/api/admin/rewards/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({ rewards: rw0.rewards }),
+  });
+  const cfgR2 = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
+  ok('przywrocenie nagrod dziala', cfgR2.rewards.length === cnt0);
+
+  // edycja stron informacyjnych: panel -> API -> /api/app/config
+  const pg0 = await (await fetch(base + '/api/admin/pages/' + cid, { headers: hAuth })).json();
+  ok('GET pages zwraca liste', Array.isArray(pg0.pages) && pg0.pages.length >= 1);
+  const pcnt0 = pg0.pages.length;
+  const editedP = pg0.pages.map((p, i) => (i === 0 ? { ...p, title: 'Test tytul ABC' } : p));
+  const putP = await fetch(base + '/api/admin/pages/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({ pages: editedP }),
+  });
+  ok('zapis stron (PUT) zwraca 200', putP.status === 200);
+  const cfgP = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
+  ok('zmiana tytulu strony w /api/app/config', cfgP.infoPages.some((p) => p.title === 'Test tytul ABC'));
+  await fetch(base + '/api/admin/pages/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({ pages: pg0.pages }),
+  });
+  const cfgP2 = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
+  ok('przywrocenie stron dziala', cfgP2.infoPages.length === pcnt0);
 } catch (e) {
   fail++; console.log('  XX  wyjatek: ' + e.message);
 }
