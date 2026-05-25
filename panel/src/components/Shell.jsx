@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../AuthContext.jsx';
 import { T } from '../theme.js';
 import Dashboard from '../pages/Dashboard.jsx';
+import Scoring from '../pages/Scoring.jsx';
 
 // Lista modułów panelu. stage = etap wdrożenia (1 = gotowy).
 const MODULES = [
@@ -93,8 +94,8 @@ export default function Shell() {
 
         {/* Treść */}
         <main style={{ flex: 1, overflowY: 'auto', padding: '26px 28px' }}>
-          {view === 'dashboard'
-            ? <Dashboard />
+          {view === 'dashboard' ? <Dashboard />
+            : view === 'scoring' ? <Scoring />
             : <Placeholder module={current} />}
         </main>
       </div>

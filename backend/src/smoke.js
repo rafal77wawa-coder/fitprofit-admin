@@ -48,6 +48,33 @@ try {
   ok('regula foot = 6 pkt/km, limit 100', Number(foot.points_per_unit) === 6 && Number(foot.daily_point_limit) === 100);
   ok('app/config zwraca cel charytatywny 19000', cfg.charity && Number(cfg.charity.target_amount) === 19000);
   ok('app/config zwraca nagrody', cfg.rewards.length >= 1);
+
+  // edycja punktacji: panel -> API -> baza -> /api/app/config
+  const cid = contests.contests[0].id;
+  const hAuth = { Authorization: 'Bearer ' + login.token };
+  const before = await (await fetch(base + '/api/admin/scoring/' + cid, { headers: hAuth })).json();
+  const foot0 = Number(before.rules.find((r) => r.category === 'foot').points_per_unit);
+  const edited = before.rules.map((r) => (r.category === 'foot' ? { ...r, points_per_unit: 9 } : r));
+  const putRes = await fetch(base + '/api/admin/scoring/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({ rules: edited }),
+  });
+  ok('zapis punktacji (PUT) zwraca 200', putRes.status === 200);
+  const cfg2 = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
+  ok('zmiana punktacji widoczna w /api/app/config',
+    Number(cfg2.scoring.find((r) => r.category === 'foot').points_per_unit) === 9);
+  const noTokPut = await fetch(base + '/api/admin/scoring/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rules: edited }),
+  });
+  ok('zapis punktacji bez tokenu -> 401', noTokPut.status === 401);
+  await fetch(base + '/api/admin/scoring/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({ rules: before.rules }),
+  });
+  const cfg3 = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
+  ok('przywrocenie punktacji dziala',
+    Number(cfg3.scoring.find((r) => r.category === 'foot').points_per_unit) === foot0);
 } catch (e) {
   fail++; console.log('  XX  wyjatek: ' + e.message);
 }

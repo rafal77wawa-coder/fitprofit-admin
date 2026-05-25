@@ -7,6 +7,7 @@ import db from './db.js';
 import { requireAuth } from './auth.js';
 import authRoutes from './routes/auth.js';
 import appConfigRoutes from './routes/appConfig.js';
+import scoringRoutes from './routes/scoring.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Zbudowany panel: backend serwuje go w produkcji (jedna domena, bez CORS).
@@ -23,6 +24,7 @@ export function createApp() {
 
   app.use('/api/auth', authRoutes);
   app.use('/api/app', appConfigRoutes);
+  app.use('/api/admin/scoring', scoringRoutes);
 
   app.get('/api/admin/contests', requireAuth, async (req, res) => {
     res.json({ contests: await db.all('SELECT * FROM contests ORDER BY id DESC') });
