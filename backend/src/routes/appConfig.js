@@ -25,6 +25,10 @@ router.get('/config', async (req, res) => {
   const infoPages = await db.all('SELECT type, title, content FROM info_pages WHERE contest_id = ?', contest.id);
   const eko = await db.get('SELECT * FROM eko_settings WHERE contest_id = ?', contest.id);
   const branding = await db.get('SELECT * FROM branding WHERE contest_id = ?', contest.id);
+  const join = await db.get(
+    'SELECT participant_limit, entry_code, team_code_join, invite_links, regulations_url, fairplay_screen, extra_consent, work_email_domains FROM join_settings WHERE contest_id = ?',
+    contest.id
+  );
   const reminder = await db.get('SELECT * FROM reminder_defaults WHERE contest_id = ?', contest.id);
 
   res.json({
@@ -44,6 +48,7 @@ router.get('/config', async (req, res) => {
     infoPages,
     eko,
     branding,
+    join,
     reminder: reminder
       ? { ...reminder, days: String(reminder.days).split(',').filter(Boolean).map(Number) }
       : null,

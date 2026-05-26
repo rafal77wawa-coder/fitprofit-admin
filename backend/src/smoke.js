@@ -155,6 +155,30 @@ try {
   });
   const cfgP2 = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
   ok('przywrocenie stron dziala', cfgP2.infoPages.length === pcnt0);
+
+  // edycja ustawien dolaczania: panel -> API -> /api/app/config
+  const jn0 = await (await fetch(base + '/api/admin/join/' + cid, { headers: hAuth })).json();
+  ok('GET join zwraca ustawienia', jn0.join && typeof jn0.join === 'object');
+  const putJ = await fetch(base + '/api/admin/join/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({
+      participant_limit: 250, entry_code: 'TEST-VS', team_code_join: 1, invite_links: 1,
+      regulations_url: 'https://example.com/reg', fairplay_screen: 0,
+      extra_consent: 'Zgoda testowa', work_email_domains: 'firma.pl',
+    }),
+  });
+  ok('zapis dolaczania (PUT) zwraca 200', putJ.status === 200);
+  const cfgJ = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
+  ok('ustawienia dolaczania w /api/app/config', cfgJ.join && cfgJ.join.entry_code === 'TEST-VS' && Number(cfgJ.join.fairplay_screen) === 0);
+  await fetch(base + '/api/admin/join/' + cid, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({
+      participant_limit: jn0.join.participant_limit, entry_code: jn0.join.entry_code || '',
+      team_code_join: jn0.join.team_code_join, invite_links: jn0.join.invite_links,
+      regulations_url: jn0.join.regulations_url || '', fairplay_screen: jn0.join.fairplay_screen,
+      extra_consent: jn0.join.extra_consent || '', work_email_domains: jn0.join.work_email_domains || '',
+    }),
+  });
 } catch (e) {
   fail++; console.log('  XX  wyjatek: ' + e.message);
 }
