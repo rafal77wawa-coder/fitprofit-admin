@@ -179,6 +179,44 @@ try {
       extra_consent: jn0.join.extra_consent || '', work_email_domains: jn0.join.work_email_domains || '',
     }),
   });
+
+  // moduł Uczestnicy: lista, dodanie, edycja, import, ranking w /api/app/config
+  const pl0 = await (await fetch(base + '/api/admin/participants/' + cid, { headers: hAuth })).json();
+  ok('GET participants zwraca liste demo', Array.isArray(pl0.participants) && pl0.participants.length >= 9);
+  ok('participants maja punkty z aktywnosci', pl0.participants.some((p) => p.points > 0));
+  ok('GET participants zwraca zespoly', Array.isArray(pl0.teams) && pl0.teams.length >= 1);
+  const pcount0 = pl0.participants.length;
+
+  const addP = await fetch(base + '/api/admin/participants/' + cid, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({
+      first_name: 'Test', last_name: 'Nowak', company: 'VanityStyle', email: '',
+      card_type: 'EVS', evs_id: 'EVS-999', runner_id: '', team_id: null,
+    }),
+  });
+  const addJson = await addP.json();
+  ok('dodanie uczestnika (POST) zwraca 200', addP.status === 200);
+  ok('lista uczestnikow rosnie po dodaniu', addJson.participants.length === pcount0 + 1);
+  const newU = addJson.participants.find((p) => p.last_name === 'Nowak');
+
+  const impP = await fetch(base + '/api/admin/participants/' + cid + '/import', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({ rows: [
+      { imie: 'Import', nazwisko: 'Jeden', firma: 'VS', email: '' },
+      { imie: 'Import', nazwisko: 'Dwa', firma: 'VS', email: '' },
+    ] }),
+  });
+  const impJson = await impP.json();
+  ok('import CSV dodaje uczestnikow', impJson.added === 2);
+
+  const cfgL = await (await fetch(base + '/api/app/config?contest=wyzwanie-vs')).json();
+  ok('ranking w /api/app/config ma uczestnikow', Array.isArray(cfgL.leaderboard) && cfgL.leaderboard.length >= 9);
+  ok('ranking posortowany malejaco', cfgL.leaderboard[0].points >= cfgL.leaderboard[1].points);
+
+  const delP = await fetch(base + '/api/admin/participants/' + cid + '/' + newU.user_id, {
+    method: 'DELETE', headers: hAuth,
+  });
+  ok('usuniecie uczestnika (DELETE) zwraca 200', delP.status === 200);
 } catch (e) {
   fail++; console.log('  XX  wyjatek: ' + e.message);
 }

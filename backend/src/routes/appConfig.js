@@ -29,6 +29,25 @@ router.get('/config', async (req, res) => {
     'SELECT participant_limit, entry_code, team_code_join, invite_links, regulations_url, fairplay_screen, extra_consent, work_email_domains FROM join_settings WHERE contest_id = ?',
     contest.id
   );
+
+  // Ranking uczestników — realni ludzie z bazy, punkty sumowane z aktywności.
+  const leaderboardRows = await db.all(
+    `SELECT u.first_name, u.last_name, u.company, p.team_id,
+            COALESCE((SELECT SUM(a.points) FROM activities a
+                      WHERE a.participant_id = p.id AND a.deleted_at IS NULL), 0) AS points
+       FROM participants p
+       JOIN app_users u ON u.id = p.user_id
+      WHERE p.contest_id = ?`,
+    contest.id
+  );
+  const leaderboard = leaderboardRows
+    .map((r) => ({
+      name: r.first_name + ' ' + String(r.last_name || '').charAt(0) + '.',
+      company: r.company || '',
+      teamId: r.team_id,
+      points: Number(r.points) || 0,
+    }))
+    .sort((a, b) => b.points - a.points);
   const reminder = await db.get('SELECT * FROM reminder_defaults WHERE contest_id = ?', contest.id);
 
   res.json({
@@ -49,6 +68,7 @@ router.get('/config', async (req, res) => {
     eko,
     branding,
     join,
+    leaderboard,
     reminder: reminder
       ? { ...reminder, days: String(reminder.days).split(',').filter(Boolean).map(Number) }
       : null,

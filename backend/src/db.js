@@ -63,6 +63,13 @@ export async function initDb() {
   for (const sql of [
     "ALTER TABLE rewards ADD COLUMN image_url TEXT NOT NULL DEFAULT ''",
     "ALTER TABLE rewards ADD COLUMN codes TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE app_users ADD COLUMN card_type TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE app_users ADD COLUMN evs_id TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE app_users ADD COLUMN runner_id TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE app_users ADD COLUMN external_id TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE app_users ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'",
+    "ALTER TABLE app_users ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'",
+    "ALTER TABLE app_users ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP",
   ]) {
     try { await impl.exec(sql); } catch (e) { /* kolumna już istnieje */ }
   }

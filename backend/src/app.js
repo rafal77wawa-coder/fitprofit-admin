@@ -13,6 +13,7 @@ import charityRoutes from './routes/charity.js';
 import rewardsRoutes from './routes/rewards.js';
 import infopagesRoutes from './routes/infopages.js';
 import joinRoutes from './routes/join.js';
+import participantsRoutes from './routes/participants.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Zbudowany panel: backend serwuje go w produkcji (jedna domena, bez CORS).
@@ -35,6 +36,7 @@ export function createApp() {
   app.use('/api/admin/rewards', rewardsRoutes);
   app.use('/api/admin/pages', infopagesRoutes);
   app.use('/api/admin/join', joinRoutes);
+  app.use('/api/admin/participants', participantsRoutes);
 
   app.get('/api/admin/contests', requireAuth, async (req, res) => {
     res.json({ contests: await db.all('SELECT * FROM contests ORDER BY id DESC') });

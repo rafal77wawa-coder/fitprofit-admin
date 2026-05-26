@@ -83,4 +83,38 @@ export async function seed(db) {
   await db.run(insTask, contestId, 'scoring', 'Skonfiguruj silnik punktacji', 1, 1);
   await db.run(insTask, contestId, 'charity', 'Dodaj cel charytatywny', 0, 1);
   await db.run(insTask, contestId, 'invite', 'Zapros uczestnikow', 1, 0);
+
+  // Zespoly demo
+  const teamIds = [];
+  for (const tn of ['Biuro Warszawa', 'Biuro Krakow', 'Zdalni']) {
+    const t = await db.get('INSERT INTO teams (contest_id, name) VALUES (?, ?) RETURNING id', contestId, tn);
+    teamIds.push(Number(t.id));
+  }
+
+  // Uczestnicy demo + aktywnosci (punkty licza sie z aktywnosci)
+  const demoUsers = [
+    ['Anna', 'Wojcik', 'VanityStyle Sp. z o.o.', 'anna.wojcik@example.com', 0, 4821],
+    ['Piotr', 'Mazur', 'VanityStyle Sp. z o.o.', 'piotr.mazur@example.com', 1, 4103],
+    ['Julia', 'Sikora', 'VanityStyle Sp. z o.o.', 'julia.sikora@example.com', 0, 3611],
+    ['Tomasz', 'Rutkowski', 'VanityStyle Sp. z o.o.', 'tomasz.rutkowski@example.com', 2, 3204],
+    ['Karolina', 'Pawlak', 'VanityStyle Sp. z o.o.', 'karolina.pawlak@example.com', 1, 2998],
+    ['Michal', 'Baran', 'VanityStyle Sp. z o.o.', 'michal.baran@example.com', 0, 2744],
+    ['Zofia', 'Krol', 'VanityStyle Sp. z o.o.', 'zofia.krol@example.com', 2, 2502],
+    ['Adam', 'Stepien', 'VanityStyle Sp. z o.o.', 'adam.stepien@example.com', 1, 2341],
+    ['Ewa', 'Michalska', 'VanityStyle Sp. z o.o.', 'ewa.michalska@example.com', 2, 2108],
+  ];
+  for (const [fn, ln, co, em, ti, pts] of demoUsers) {
+    const u = await db.get(
+      "INSERT INTO app_users (first_name, last_name, company, email, source, status) VALUES (?, ?, ?, ?, 'import', 'active') RETURNING id",
+      fn, ln, co, em
+    );
+    const p = await db.get(
+      'INSERT INTO participants (contest_id, user_id, team_id) VALUES (?, ?, ?) RETURNING id',
+      contestId, Number(u.id), teamIds[ti]
+    );
+    await db.run(
+      "INSERT INTO activities (participant_id, category, distance_km, points, source) VALUES (?, 'foot', 0, ?, 'integration')",
+      Number(p.id), pts
+    );
+  }
 }

@@ -8,6 +8,7 @@ import Charity from '../pages/Charity.jsx';
 import Rewards from '../pages/Rewards.jsx';
 import InfoPages from '../pages/InfoPages.jsx';
 import Join from '../pages/Join.jsx';
+import Participants from '../pages/Participants.jsx';
 
 // Lista modułów panelu. stage = etap wdrożenia (1 = gotowy).
 const MODULES = [
@@ -106,6 +107,7 @@ export default function Shell() {
             : view === 'rewards' ? <Rewards />
             : view === 'pages' ? <InfoPages />
             : view === 'join' ? <Join />
+            : view === 'participants' ? <Participants />
             : <Placeholder module={current} />}
         </main>
       </div>

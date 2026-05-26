@@ -167,7 +167,24 @@ CREATE TABLE IF NOT EXISTS app_users (
   company      TEXT NOT NULL DEFAULT '',
   email        TEXT,
   display_name TEXT NOT NULL DEFAULT '',
-  display_mode TEXT NOT NULL DEFAULT 'initial'           -- initial | nick
+  display_mode TEXT NOT NULL DEFAULT 'initial',          -- initial | nick
+  card_type    TEXT NOT NULL DEFAULT '',
+  evs_id       TEXT NOT NULL DEFAULT '',
+  runner_id    TEXT NOT NULL DEFAULT '',
+  external_id  TEXT NOT NULL DEFAULT '',
+  source       TEXT NOT NULL DEFAULT 'manual',
+  status       TEXT NOT NULL DEFAULT 'pending',
+  created_at   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS invites (
+  id          SERIAL PRIMARY KEY,
+  user_id     INTEGER NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+  token       TEXT NOT NULL UNIQUE,
+  email       TEXT NOT NULL,
+  sent_at     TEXT,
+  accepted_at TEXT,
+  created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS participants (
   id         SERIAL PRIMARY KEY,
