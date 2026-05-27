@@ -60,11 +60,13 @@ async function createParticipant(contestId, d, source) {
   return { userId, participantId: Number(part.id) };
 }
 
-/* Tworzy token zaproszenia i (jeśli skonfigurowano) wysyła e-mail. */
-async function createInvite(userId, firstName, email, publicUrl) {
+/* Tworzy token zaproszenia i (jeśli skonfigurowano) wysyła e-mail.
+   Link prowadzi do APP_PUBLIC_URL (publiczny adres aplikacji) — nie do backendu. */
+async function createInvite(userId, firstName, email) {
   const token = randomBytes(24).toString('hex');
   await db.run('INSERT INTO invites (user_id, token, email) VALUES (?, ?, ?)', userId, token, email);
-  const link = (publicUrl || process.env.APP_PUBLIC_URL || '') + '/zaproszenie?token=' + token;
+  const base = (process.env.APP_PUBLIC_URL || '').replace(/\/+$/, '');
+  const link = base + '/zaproszenie?token=' + token;
   let sent = false;
   if (email && mailConfigured()) {
     const { subject, html, text } = inviteEmail({ firstName, link });
@@ -88,8 +90,7 @@ router.post('/:contestId', requireAuth, async (req, res) => {
 
   let invite = null;
   if (parsed.data.email) {
-    invite = await createInvite(userId, parsed.data.first_name, parsed.data.email,
-      req.protocol + '://' + req.get('host'));
+    invite = await createInvite(userId, parsed.data.first_name, parsed.data.email);
   }
   const participants = await listParticipants(contestId);
   res.json({ ok: true, participants, invite });
@@ -125,7 +126,7 @@ router.post('/:contestId/import', requireAuth, async (req, res) => {
     const teamName = String(raw.team || raw.zespol || '').trim().toLowerCase();
     d.team_id = teamName && teamByName[teamName] ? teamByName[teamName] : null;
     const { userId } = await createParticipant(contestId, d, 'import');
-    if (d.email) await createInvite(userId, d.first_name, d.email, req.protocol + '://' + req.get('host'));
+    if (d.email) await createInvite(userId, d.first_name, d.email);
     added += 1;
   }
   const participants = await listParticipants(contestId);
@@ -157,7 +158,7 @@ router.post('/:contestId/:userId/invite', requireAuth, async (req, res) => {
   const u = await db.get('SELECT id, first_name, email FROM app_users WHERE id = ?', req.params.userId);
   if (!u) return res.status(404).json({ error: 'Nie znaleziono uczestnika.' });
   if (!u.email) return res.status(400).json({ error: 'Uczestnik nie ma adresu e-mail.' });
-  const invite = await createInvite(u.id, u.first_name, u.email, req.protocol + '://' + req.get('host'));
+  const invite = await createInvite(u.id, u.first_name, u.email);
   res.json({ ok: true, invite });
 });
 

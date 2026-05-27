@@ -217,6 +217,61 @@ try {
     method: 'DELETE', headers: hAuth,
   });
   ok('usuniecie uczestnika (DELETE) zwraca 200', delP.status === 200);
+
+  // pełna ścieżka konta użytkownika aplikacji: zaproszenie -> rejestracja -> login -> me
+  const addU2 = await fetch(base + '/api/admin/participants/' + cid, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({
+      first_name: 'Konto', last_name: 'Testowe', company: 'VS',
+      email: 'konto.test@example.com', card_type: '', evs_id: '', runner_id: '', team_id: null,
+    }),
+  });
+  const addU2Json = await addU2.json();
+  const invToken = addU2Json.invite && addU2Json.invite.token;
+  ok('dodanie uczestnika tworzy token zaproszenia', Boolean(invToken));
+  ok('link zaproszenia wskazuje na aplikacje', String(addU2Json.invite.link).includes('/zaproszenie?token='));
+
+  const invChk = await (await fetch(base + '/api/app/invite/' + invToken)).json();
+  ok('GET invite zwraca imie do powitania', invChk.firstName === 'Konto');
+
+  const reg = await fetch(base + '/api/app/register', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: invToken, password: 'haslo12345' }),
+  });
+  const regJson = await reg.json();
+  ok('rejestracja przez zaproszenie zwraca token sesji', reg.status === 200 && Boolean(regJson.token));
+
+  const invReuse = await fetch(base + '/api/app/register', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token: invToken, password: 'inne12345' }),
+  });
+  ok('zaproszenie jest jednorazowe', invReuse.status === 409);
+
+  const appLogin = await fetch(base + '/api/app/login', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'konto.test@example.com', password: 'haslo12345' }),
+  });
+  const appLoginJson = await appLogin.json();
+  ok('logowanie e-mail+haslo dziala', appLogin.status === 200 && Boolean(appLoginJson.token));
+
+  const badLogin = await fetch(base + '/api/app/login', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'konto.test@example.com', password: 'zle-haslo' }),
+  });
+  ok('zle haslo odrzucone', badLogin.status === 401);
+
+  const appMe = await fetch(base + '/api/app/me', { headers: { Authorization: 'Bearer ' + appLoginJson.token } });
+  const appMeJson = await appMe.json();
+  ok('GET appMe zwraca profil zalogowanego', appMe.status === 200 && appMeJson.user.email === 'konto.test@example.com');
+
+  const meNoAuth = await fetch(base + '/api/app/me');
+  ok('GET appMe bez tokenu odrzucone', meNoAuth.status === 401);
+
+  const forgot = await fetch(base + '/api/app/forgot', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'konto.test@example.com' }),
+  });
+  ok('forgot zwraca neutralna odpowiedz', forgot.status === 200);
 } catch (e) {
   fail++; console.log('  XX  wyjatek: ' + e.message);
 }

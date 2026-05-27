@@ -174,6 +174,7 @@ CREATE TABLE IF NOT EXISTS app_users (
   external_id  TEXT NOT NULL DEFAULT '',                 -- ID użytkownika w VanityStyle Next (do synchronizacji)
   source       TEXT NOT NULL DEFAULT 'manual',           -- manual | import | api
   status       TEXT NOT NULL DEFAULT 'pending',          -- pending | active
+  password_hash TEXT NOT NULL DEFAULT '',                -- bcrypt; puste = konto nieaktywowane
   created_at   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -182,6 +183,7 @@ CREATE TABLE IF NOT EXISTS invites (
   user_id     INTEGER NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
   token       TEXT NOT NULL UNIQUE,
   email       TEXT NOT NULL,
+  kind        TEXT NOT NULL DEFAULT 'invite',            -- invite | reset
   sent_at     TEXT,
   accepted_at TEXT,
   created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP

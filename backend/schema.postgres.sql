@@ -174,6 +174,7 @@ CREATE TABLE IF NOT EXISTS app_users (
   external_id  TEXT NOT NULL DEFAULT '',
   source       TEXT NOT NULL DEFAULT 'manual',
   status       TEXT NOT NULL DEFAULT 'pending',
+  password_hash TEXT NOT NULL DEFAULT '',
   created_at   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -182,6 +183,7 @@ CREATE TABLE IF NOT EXISTS invites (
   user_id     INTEGER NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
   token       TEXT NOT NULL UNIQUE,
   email       TEXT NOT NULL,
+  kind        TEXT NOT NULL DEFAULT 'invite',
   sent_at     TEXT,
   accepted_at TEXT,
   created_at  TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP

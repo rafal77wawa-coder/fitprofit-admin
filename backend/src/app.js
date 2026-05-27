@@ -14,6 +14,7 @@ import rewardsRoutes from './routes/rewards.js';
 import infopagesRoutes from './routes/infopages.js';
 import joinRoutes from './routes/join.js';
 import participantsRoutes from './routes/participants.js';
+import appAuthRoutes from './routes/appAuth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Zbudowany panel: backend serwuje go w produkcji (jedna domena, bez CORS).
@@ -30,6 +31,7 @@ export function createApp() {
 
   app.use('/api/auth', authRoutes);
   app.use('/api/app', appConfigRoutes);
+  app.use('/api/app', appAuthRoutes);
   app.use('/api/admin/scoring', scoringRoutes);
   app.use('/api/admin/branding', brandingRoutes);
   app.use('/api/admin/charity', charityRoutes);

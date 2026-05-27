@@ -70,6 +70,8 @@ export async function initDb() {
     "ALTER TABLE app_users ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'",
     "ALTER TABLE app_users ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'",
     "ALTER TABLE app_users ADD COLUMN created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP",
+    "ALTER TABLE app_users ADD COLUMN password_hash TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE invites ADD COLUMN kind TEXT NOT NULL DEFAULT 'invite'",
   ]) {
     try { await impl.exec(sql); } catch (e) { /* kolumna już istnieje */ }
   }

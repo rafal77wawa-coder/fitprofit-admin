@@ -73,3 +73,28 @@ export function inviteEmail({ firstName, link }) {
   const text = `Cześć ${firstName || ''}! Zostałeś zaproszony do wyzwania FitProfit. Dokończ rejestrację: ${link}`;
   return { subject, html, text };
 }
+
+/* Treść maila resetu hasła. */
+export function resetEmail({ firstName, link }) {
+  const subject = 'Reset hasła w aplikacji FitProfit';
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;color:#181C33">
+      <h2 style="color:#181C33">Cześć ${firstName || ''}!</h2>
+      <p style="font-size:14px;line-height:1.6;color:#444">
+        Otrzymaliśmy prośbę o zresetowanie hasła do Twojego konta FitProfit.
+        Kliknij poniższy przycisk, aby ustawić nowe hasło. Jeśli to nie Ty, zignoruj tę wiadomość.
+      </p>
+      <p style="text-align:center;margin:28px 0">
+        <a href="${link}" style="background:#181C33;color:#fff;text-decoration:none;
+           padding:12px 28px;border-radius:10px;font-weight:bold;font-size:14px;display:inline-block">
+          Ustaw nowe hasło
+        </a>
+      </p>
+      <p style="font-size:12px;color:#888;line-height:1.5">
+        Jeśli przycisk nie działa, skopiuj ten adres do przeglądarki:<br>
+        <span style="color:#0C5093">${link}</span>
+      </p>
+    </div>`;
+  const text = `Cześć ${firstName || ''}! Reset hasła FitProfit: ${link}`;
+  return { subject, html, text };
+}
