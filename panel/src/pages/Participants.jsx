@@ -25,6 +25,8 @@ export default function Participants() {
   const [mailReady, setMailReady] = useState(false);
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState(null);   // null | EMPTY (nowy) | uczestnik (edycja)
+  const [pwUser, setPwUser] = useState(null);     // uczestnik, któremu admin ustawia hasło
+  const [pwValue, setPwValue] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [error, setError] = useState('');
@@ -106,6 +108,35 @@ export default function Participants() {
       setError(e.message);
     }
     setBusy(false);
+  }
+
+  async function savePassword() {
+    if (pwValue.length < 8) {
+      setError('Hasło musi mieć co najmniej 8 znaków.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    try {
+      await api('/admin/participants/' + contestId + '/' + pwUser.user_id + '/set-password', {
+        method: 'POST', body: JSON.stringify({ password: pwValue }),
+      });
+      await reload(contestId);
+      setMsg('Hasło ustawione dla: ' + pwUser.first_name + ' ' + pwUser.last_name
+        + '. Przekaż je użytkownikowi: ' + pwValue);
+      setPwUser(null);
+      setPwValue('');
+    } catch (e) {
+      setError(e.message);
+    }
+    setBusy(false);
+  }
+
+  function genPassword() {
+    const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let s = '';
+    for (let i = 0; i < 10; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    setPwValue(s);
   }
 
   async function resend(u) {
@@ -241,6 +272,9 @@ export default function Participants() {
                       ✉
                     </button>
                   )}
+                  <button onClick={() => { setPwUser(u); setPwValue(''); setError(''); }} style={btnMini} title="Ustaw hasło">
+                    🔑
+                  </button>
                   <button onClick={() => { setEditing(u); setError(''); }} style={btnMini} title="Edytuj">✎</button>
                   <button onClick={() => remove(u)} disabled={busy} style={{ ...btnMini, color: T.red }} title="Usuń">×</button>
                 </td>
@@ -252,6 +286,37 @@ export default function Participants() {
           </tbody>
         </table>
       </div>
+
+      {pwUser && (
+        <div style={overlay} onClick={() => setPwUser(null)}>
+          <div style={modal} onClick={(e) => e.stopPropagation()}>
+            <h2 style={{ fontSize: 17, fontWeight: 800, marginBottom: 4 }}>Ustaw hasło</h2>
+            <p style={{ fontSize: 13, color: T.grey, marginBottom: 14 }}>
+              Konto: <b style={{ color: T.text }}>{pwUser.first_name} {pwUser.last_name}</b>
+              {pwUser.email ? ' · ' + pwUser.email : ''}
+            </p>
+            <p style={{ fontSize: 12, color: T.grey, marginBottom: 12, lineHeight: 1.5 }}>
+              Po ustawieniu hasła konto staje się aktywne — użytkownik może zalogować się
+              w aplikacji e-mailem i tym hasłem. Hasło przekaż mu samodzielnie.
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type="text" value={pwValue} placeholder="Hasło (min. 8 znaków)"
+                onChange={(e) => setPwValue(e.target.value)}
+                style={{ ...input, flex: 1, fontFamily: 'monospace' }}
+              />
+              <button onClick={genPassword} style={btnGhost}>Generuj</button>
+            </div>
+            {error && <div style={{ color: T.red, fontSize: 12, marginTop: 8 }}>{error}</div>}
+            <div style={{ display: 'flex', gap: 10, marginTop: 16, justifyContent: 'flex-end' }}>
+              <button onClick={() => setPwUser(null)} style={btnGhost}>Anuluj</button>
+              <button onClick={savePassword} disabled={busy} style={btnPrimary}>
+                {busy ? 'Zapisywanie…' : 'Ustaw hasło'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {editing && (
         <div style={overlay} onClick={() => setEditing(null)}>

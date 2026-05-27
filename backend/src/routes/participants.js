@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { randomBytes } from 'node:crypto';
+import bcrypt from 'bcryptjs';
 import db from '../db.js';
 import { requireAuth } from '../auth.js';
 import { sendEmail, inviteEmail, mailConfigured } from '../mailer.js';
@@ -160,6 +161,20 @@ router.post('/:contestId/:userId/invite', requireAuth, async (req, res) => {
   if (!u.email) return res.status(400).json({ error: 'Uczestnik nie ma adresu e-mail.' });
   const invite = await createInvite(u.id, u.first_name, u.email);
   res.json({ ok: true, invite });
+});
+
+// POST /api/admin/participants/:contestId/:userId/set-password — admin nadaje hasło
+router.post('/:contestId/:userId/set-password', requireAuth, async (req, res) => {
+  const password = String(req.body?.password || '');
+  if (password.length < 8) {
+    return res.status(400).json({ error: 'Hasło musi mieć co najmniej 8 znaków.' });
+  }
+  const u = await db.get('SELECT id FROM app_users WHERE id = ?', req.params.userId);
+  if (!u) return res.status(404).json({ error: 'Nie znaleziono uczestnika.' });
+
+  const hash = await bcrypt.hash(password, 10);
+  await db.run("UPDATE app_users SET password_hash = ?, status = 'active' WHERE id = ?", hash, u.id);
+  res.json({ ok: true });
 });
 
 // DELETE /api/admin/participants/:contestId/:userId — usunięcie uczestnika

@@ -272,6 +272,32 @@ try {
     body: JSON.stringify({ email: 'konto.test@example.com' }),
   });
   ok('forgot zwraca neutralna odpowiedz', forgot.status === 200);
+
+  // admin ustawia haslo uczestnikowi (wariant B) -> user loguje sie tym haslem
+  const u3 = await fetch(base + '/api/admin/participants/' + cid, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({
+      first_name: 'Admin', last_name: 'Haslo', company: 'VS',
+      email: 'admin.haslo@example.com', card_type: '', evs_id: '', runner_id: '', team_id: null,
+    }),
+  });
+  const u3Json = await u3.json();
+  const u3id = u3Json.participants.find((p) => p.last_name === 'Haslo').user_id;
+  const setPw = await fetch(base + '/api/admin/participants/' + cid + '/' + u3id + '/set-password', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({ password: 'adminowe123' }),
+  });
+  ok('admin ustawia haslo (200)', setPw.status === 200);
+  const shortPw = await fetch(base + '/api/admin/participants/' + cid + '/' + u3id + '/set-password', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...hAuth },
+    body: JSON.stringify({ password: 'krotkie' }),
+  });
+  ok('za krotkie haslo odrzucone', shortPw.status === 400);
+  const loginByAdminPw = await fetch(base + '/api/app/login', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'admin.haslo@example.com', password: 'adminowe123' }),
+  });
+  ok('user loguje sie haslem od admina', loginByAdminPw.status === 200);
 } catch (e) {
   fail++; console.log('  XX  wyjatek: ' + e.message);
 }
